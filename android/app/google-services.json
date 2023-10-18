@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "260096194613",
+    "project_id": "file-encrypt-5869e",
+    "storage_bucket": "file-encrypt-5869e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:260096194613:android:3e4fcca959a1dacd84197c",
+        "android_client_info": {
+          "package_name": "com.shafiq.flutter_encrypto"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCdQnWDhocLwQi9S4zGRvWatfQH1TSgg10"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
