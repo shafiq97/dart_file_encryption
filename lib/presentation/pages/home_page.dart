@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -337,7 +338,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       );
     } else if (status.isPermanentlyDenied) {
       _showPermissionDialog(
-          "encrypto may not work correctly without the storage permissions.\n\nopen the app settings to modify app permissions",
+          "encryption may not work correctly without the storage permissions.\n\nopen the app settings to modify app permissions",
           onPressed: () async {
         await openAppSettings();
       }, buttonLabel: "open settings");
@@ -423,6 +424,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     methodNotifier.value = CryptionMethod.encrypt;
     await _startAnimation();
     cryptoBloc.add(CryptoEvent.encrypt(_keyController.text.trim()));
+
+    // Define the "Download" directory path on Android
+    String downloadDirPath = "/storage/emulated/0/Download";
+
+    // Assume that the selected file's name is stored in state.selectedFile?.name
+    String originalFileName = cryptoBloc.state.selectedFile!.name;
+    String newFileName = "de_" + originalFileName;
+
+    // Define the original and new file paths
+    String currentFilePath = downloadDirPath + '/' + originalFileName;
+    String newFilePath = downloadDirPath + '/' + newFileName;
+
+    await File(currentFilePath).copy(newFilePath);
   }
 
   Future<void> _onDecryptPressed() async {
