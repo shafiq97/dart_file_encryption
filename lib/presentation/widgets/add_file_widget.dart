@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,6 +8,7 @@ import 'package:flutter_encrypto/core/enums.dart';
 import 'package:flutter_encrypto/presentation/core/palette.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lottie/lottie.dart';
+import 'package:http/http.dart' as http;
 
 class AddFileWidget extends StatelessWidget {
   const AddFileWidget({
@@ -18,6 +21,25 @@ class AddFileWidget extends StatelessWidget {
   final AnimationController applyController;
   final AnimationController pickFileController;
   final ValueNotifier<CryptionMethod> methodNotifier;
+
+  Future<void> uploadFileWithKey(File file, String key) async {
+    // Assuming 'file' is a File object and 'key' is the encryption key as a String
+    var uri = Uri.parse('your_api_endpoint_here/upload');
+    var request = http.MultipartRequest('POST', uri);
+
+    request.files.add(await http.MultipartFile.fromPath('file', file.path));
+    // Adding the encryption key as a field in the request
+    request.fields['key'] = key;
+
+    // Send the request
+    var response = await request.send();
+
+    if (response.statusCode == 200) {
+      print("File uploaded successfully");
+    } else {
+      print("Failed to upload file");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

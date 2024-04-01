@@ -20,6 +20,8 @@ import 'package:lottie/lottie.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -421,30 +423,93 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Future<void> _onEncryptPressed() async {
     if (!_validate()) return;
 
-    methodNotifier.value = CryptionMethod.encrypt;
-    await _startAnimation();
-    cryptoBloc.add(CryptoEvent.encrypt(_keyController.text.trim()));
+    // Assuming you have a method to validate your form or input
+    String filePath = cryptoBloc.state.selectedFile!.path!;
+    File selectedFile = File(filePath);
+    String key = _keyController.text.trim();
 
-    // Define the "Download" directory path on Android
-    String downloadDirPath = "/storage/emulated/0/Download";
+    // Define your API endpoint
+    String apiUrl = "http://10.0.2.2:5001/upload"; // Adjust the URL as needed
 
-    // Assume that the selected file's name is stored in state.selectedFile?.name
-    String originalFileName = cryptoBloc.state.selectedFile!.name;
-    String newFileName = "de_" + originalFileName;
+    try {
+      var request = http.MultipartRequest('POST', Uri.parse(apiUrl))
+        ..files
+            .add(await http.MultipartFile.fromPath('file', selectedFile.path))
+        ..fields['key'] =
+            key; // Include the encryption key as part of the request
 
-    // Define the original and new file paths
-    String currentFilePath = downloadDirPath + '/' + originalFileName;
-    String newFilePath = downloadDirPath + '/' + newFileName;
+      var streamedResponse = await request.send();
 
-    await File(currentFilePath).copy(newFilePath);
+      if (streamedResponse.statusCode == 200) {
+        // Listen for the response and write the bytes to a file
+        final content = await streamedResponse.stream.toBytes();
+
+        // Check for storage permission
+        var status = await Permission.storage.status;
+        // if (!status.isGranted) {
+        //   await Permission.storage.request();
+        // }
+
+        await Permission.storage.request();
+        // Save the file in the documents directory
+        final directory = await getApplicationDocumentsDirectory();
+        final file = File(
+            '${directory.path}/encrypted_file.enc'); // Specifying the file extension is a good practice
+
+        await file.writeAsBytes(content);
+
+        print("File downloaded and saved: ${file.path}");
+        // Optionally, navigate to a new screen or provide user feedback
+      } else {
+        print("Failed to download file.");
+        // Handle failure
+      }
+    } catch (e) {
+      print("An error occurred: $e");
+      // Handle exception
+    }
   }
 
   Future<void> _onDecryptPressed() async {
     if (!_validate()) return;
 
-    methodNotifier.value = CryptionMethod.decrypt;
-    await _startAnimation();
-    cryptoBloc.add(CryptoEvent.decrypty(_keyController.text.trim()));
+    // Assuming validation passed and you have a selected encrypted file to decrypt
+    File selectedFile = File(cryptoBloc.state.selectedFile!.path!);
+    String key = _keyController.text.trim();
+
+    // Define your API endpoint for decryption
+    String apiUrl = "http://10.0.2.2:5001/decrypt"; // Adjust the URL as needed
+
+    try {
+      var request = http.MultipartRequest('POST', Uri.parse(apiUrl))
+        ..files
+            .add(await http.MultipartFile.fromPath('file', selectedFile.path))
+        ..fields['key'] =
+            key; // Include the decryption key as part of the request
+
+      var streamedResponse = await request.send();
+
+      if (streamedResponse.statusCode == 200) {
+        // Listen for the response and write the bytes to a file
+        final content = await streamedResponse.stream.toBytes();
+        final directory = await getApplicationDocumentsDirectory();
+        // Assuming you want to save the decrypted file with a new name
+        final decryptedFileName =
+            selectedFile.path.split('/').last.replaceAll('encrypted_', '');
+        final file = File('${directory.path}/$decryptedFileName');
+
+        await file.writeAsBytes(content);
+
+        print("Decrypted file downloaded and saved: ${file.path}");
+        // Optionally, navigate to a result page or provide user feedback
+      } else {
+        print("Failed to download decrypted file.");
+        // Handle failure, e.g., show an error message
+      }
+    } catch (e) {
+      print("An error occurred: $e");
+      // Handle exception, e.g., show an error message
+    }
   }
 
   bool _validate() {

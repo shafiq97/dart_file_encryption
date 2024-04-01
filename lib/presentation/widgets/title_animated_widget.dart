@@ -28,7 +28,7 @@ class TitleAnimatedWidget extends StatelessWidget {
                 milliseconds: 400,
               ),
               child: Text(
-                "File locker by Adam",
+                "File locker by FAA",
                 style: TextStyle(
                     fontSize: 18,
                     color: Colors.white,
